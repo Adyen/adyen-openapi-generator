@@ -4,6 +4,7 @@ Vagrantfile
 .cache/
 .vagrant/
 .idea/
+tmp/
 
 # Logs
 logs
