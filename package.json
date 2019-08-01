@@ -1,6 +1,6 @@
 {
   "name": "adyen-openapi-generator",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Generate OpenApi models from Adyen Services APIs",
   "main": "index.js",
   "repository": "https://github.com/KadoBOT/adyen-openapi-generator",

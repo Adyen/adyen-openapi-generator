@@ -3,6 +3,7 @@ models/
 Vagrantfile
 .cache/
 .vagrant/
+.idea/
 
 # Logs
 logs
