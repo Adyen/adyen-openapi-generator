@@ -7,9 +7,10 @@
   "author": "KadoBOT",
   "license": "MIT",
   "dependencies": {
-    "shelljs": "^0.8.3"
+    "shelljs": "^0.8.3",
+    "yargs": "^15.3.1"
   },
   "scripts": {
-    "build": "openapi-generator-cli/openapi-generator"
+    "build": "openapi-generator-cli/bin/openapi-generator"
   }
 }
