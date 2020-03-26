@@ -5,7 +5,7 @@ Generate OpenApi models from Adyen Services APIs
 2) `$ node index.js <command> [options]`
 
 ## Usage:
-```bash
+```console
 Usage: index.js <command> [options]
 
 Commands:
