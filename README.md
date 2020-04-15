@@ -17,7 +17,7 @@ Options:
                         files. Use together with the service option     [string]
   --file, -f            Generate model from a local file                 [array]
   --language, -l        Generate model for specified language
-      [string] [required] [choices: "csharp", "go", "java", "javascript", "php",
+      [string] [required] [choices: "csharp", "go", "go-experimental", "java", "javascript", "php",
                                                     "python", "typescript-node"]
   --services, -s        Generate models for specified services only
       [array] [choices: "checkout", "checkout utility", "payments", "recurring",
