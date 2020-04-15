@@ -11,6 +11,6 @@
     "yargs": "^15.3.1"
   },
   "scripts": {
-    "build": "openapi-generator-cli/bin/openapi-generator"
+    "build": "node ./openapi-generator-cli/bin/openapi-generator"
   }
 }
