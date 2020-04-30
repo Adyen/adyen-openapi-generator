@@ -1,8 +1,11 @@
-# adyen-openapi-generator
-Generate OpenApi models from Adyen Services APIs
+# Adyen open-api generator
+Generate OpenApi models from Adyen APIs to adopt to the Adyen API libraries.
 
-1) `$ npm install`
-2) `$ node index.js <command> [options]`
+## Requirements
+* Node 
+
+## Installation
+`$ npm install`
 
 ## Usage:
 ```console
@@ -28,3 +31,7 @@ Options:
                                                   [string] [default: "./models"]
   --help, -h            Show help                                      [boolean]
 ```
+
+
+## License
+MIT license. For more information, see the LICENSE file.
