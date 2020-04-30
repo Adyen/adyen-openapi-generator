@@ -33,7 +33,8 @@ let baseUrl = "https://docs.adyen.com/api-explorer/json";
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`);
+    const dockerGenerate = `docker run --rm -v "${path.resolve(__dirname)}:/local" openapitools/openapi-generator-cli generate`
+    shell.exec(`${dockerGenerate} --skip-validate-spec -i /local/${f} ${argv.templatesPath ? `-t /local/${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o /local/${o}`);
 }
 
 if (argv.files) {
