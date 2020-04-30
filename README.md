@@ -18,7 +18,7 @@ Options:
   --version             Show version number                            [boolean]
   --version-number, -v  Version of the API to download. Does not work for local
                         files. Use together with the service option     [string]
-  --file, -f            Generate model from a local file                 [array]
+  --files, -f           Generate model from local files                  [array]
   --language, -l        Generate model for specified language
       [string] [required] [choices: "csharp", "go", "go-experimental", "java", "javascript", "php",
                                                     "python", "typescript-node"]
