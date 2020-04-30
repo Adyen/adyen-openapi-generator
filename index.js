@@ -32,8 +32,8 @@ let baseUrl = "https://docs.adyen.com/api-explorer/json";
 
 shell.mkdir(tmpFolder);
 
-if (argv.file) {
-    argv.file.forEach(f => {
+if (argv.files) {
+    argv.files.forEach(f => {
         shell.echo(`┌ ⚙️  Generating specs for file: ${f}`);
         shell.exec(`npm run build -- generate -i ${f} -t ${argv.templatesPath} -p ${argv.packageName} -g ${argv.language} -o ${path.join(__dirname, argv.output)} >/dev/null`);
         // shell.exec(`export JAVA_OPTS='-Dmodels -DskipFormModel=true' && npm run build -- generate -i ${f} -t ${argv.templatesPath} -p ${argv.packageName} -g ${argv.language} -o ${path.join(__dirname, argv.output)} >/dev/null`);
