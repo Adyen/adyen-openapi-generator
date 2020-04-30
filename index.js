@@ -32,11 +32,14 @@ let baseUrl = "https://docs.adyen.com/api-explorer/json";
 
 shell.mkdir(tmpFolder);
 
+const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
+    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`);
+}
+
 if (argv.files) {
     argv.files.forEach(f => {
         shell.echo(`┌ ⚙️  Generating specs for file: ${f}`);
-        shell.exec(`npm run build -- generate -i ${f} -t ${argv.templatesPath} -p ${argv.packageName} -g ${argv.language} -o ${path.join(__dirname, argv.output)} >/dev/null`);
-        // shell.exec(`export JAVA_OPTS='-Dmodels -DskipFormModel=true' && npm run build -- generate -i ${f} -t ${argv.templatesPath} -p ${argv.packageName} -g ${argv.language} -o ${path.join(__dirname, argv.output)} >/dev/null`);
+        generateTemplate(f)
         shell.echo("└ ✔️  Done");
     })
 } else {
@@ -69,8 +72,7 @@ if (argv.files) {
             shell.echo(`   │   │ 🗜   Downloading OpenAPI file from  ${baseUrl}/${value.reference}`);
             shell.exec(`curl ${baseUrl}/${value.reference} -o "${filePath}"`);
             shell.echo(`   │   │ ⚙️   Generating specs for ${name} v${key}`);
-            shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate -i ${filePath} -t ${argv.templatesPath} -p ${name} -g ${argv.language} -o ${output}`);
-            // shell.exec(`export JAVA_OPTS='-Dmodels' && npm run build -- generate -i ${filePath}  -t ${argv.templatesPath} -p ${argv.packageName} -g ${argv.language} -o ${path.join(__dirname, argv.output, formattedName, `v${key}`)}>/dev/null`);
+            generateTemplate(filePath, formattedName, output)
             shell.echo("   │   └ ✔️  done");
         });
         shell.echo(`   └─ Done!`);
