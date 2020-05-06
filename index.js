@@ -36,7 +36,7 @@ const latestReleaseUri = `${repo}/releases/latest`
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`, { silent: true });
+    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`, { silent: true });
 }
 
 const fetchServices = async () => {
