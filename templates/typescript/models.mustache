@@ -1,0 +1,11 @@
+{{#models}}
+{{#model}}
+export * from '{{{ classFilename }}}';
+{{/model}}
+{{/models}}
+
+{{#models}}
+{{#model}}
+import { {{classname}} } from '{{{ classFilename }}}';
+{{/model}}
+{{/models}}

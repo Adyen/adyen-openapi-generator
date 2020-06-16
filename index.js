@@ -7,17 +7,18 @@ const argv = yargs
     .usage('Usage: $0 <command> [options]')
     .command('generate', 'Generate API models from an OpenAPI spec')
     .option('versionNumber', { alias: 'v', description: 'Version of the API to download. Does not work for local files. Use "latest" for latest version.', type: 'string' })
-    .option('files', {alias: 'f', description: 'Generate model from a local file', type: "array" })
+    .option('files', { alias: 'f', description: 'Generate model from a local file', type: "array" })
     .option('language', {
         alias: 'l', description: 'Generate model for specified language', type: 'string',
         choices: ['csharp', 'go', 'go-experimental', 'java', 'javascript', 'php', 'python', 'typescript-node']
     })
-    .option('packageName', { alias: 'p', description: 'Name of the API Service '})
-    .option('templatesPath', { alias: 't', description: 'Use custom templates from given path'})
+    .option('packageName', { alias: 'p', description: 'Name of the API Service ' })
+    .option('templatesPath', { alias: 't', description: 'Use custom templates from given path' })
     .option('services', {
         alias: 's', description: 'Generate models for specified services only', type: "array",
         choices: services
     })
+    .option('modelsOnly', { alias: 'm', description: 'Generate only models (No API)', type: 'boolean' })
     .option('output', { alias: 'o', description: 'Path where generated models are saved', type: 'string', default: './models' })
     .demandOption(['l'])
     .help()
@@ -36,7 +37,9 @@ const latestReleaseUri = `${repo}/releases/latest`
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`, { silent: true });
+    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`
+    const command = argv.modelsOnly ? `export JAVA_OPTS='-Dmodels -DskipFormModel=true' && ${generateCommand}` : generateCommand
+    shell.exec(command, { silent: true });
 }
 
 const fetchServices = async () => {
@@ -47,7 +50,7 @@ const fetchServices = async () => {
 const downloadApiFiles = async (value, filePath) => {
     const res = await fetch(`${baseUrl}/${value.reference}`)
     const json = await res.json()
-    fs.writeFileSync(filePath, JSON.stringify(json, null, 4), {flag: 'w', encoding: 'utf8'}, function(err) {
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 4), { flag: 'w', encoding: 'utf8' }, function (err) {
         if (err) {
             return console.error(err)
         }
@@ -56,7 +59,7 @@ const downloadApiFiles = async (value, filePath) => {
 
 const getLatestVersion = async () => {
     const res = await fetch(latestReleaseUri)
-    const {tag_name: tagName} = await res.json()
+    const { tag_name: tagName } = await res.json()
     return tagName.slice(1)
 }
 const hasLatestVersion = async (tagName) => {
@@ -86,7 +89,7 @@ const hasLatestVersion = async (tagName) => {
 (async function run() {
     const latestVer = await getLatestVersion()
     const isLatest = await hasLatestVersion(latestVer)
-    if(!isLatest) {
+    if (!isLatest) {
         console.log("Downloading latest version of the OpenAPI Generator JAR file... (This will happen only once for every new version)")
         shell.rm("-rf", "./openapi-generator-cli/bin/openapi-generator-*.jar")
         shell.cd("./openapi-generator-cli")
@@ -102,7 +105,7 @@ const hasLatestVersion = async (tagName) => {
                 console.log("└ ✔️  Done");
             })
         } else {
-            const {services} = await fetchServices()
+            const { services } = await fetchServices()
             const filteredServices = argv.services ? Object.entries(services).filter(([name]) => argv.services.includes(name.toLowerCase())) : Object.entries(services);
             console.log(`\n  💬    Models will be saved on ${path.resolve(__dirname, argv.output)} folder\n`)
             for ([name, service] of filteredServices) {
@@ -118,7 +121,7 @@ const hasLatestVersion = async (tagName) => {
                     console.error('Error: API returned 0 results for given version number')
                     process.exit(1)
                 }
-                for([index, [key, value]] of filteredVersions.entries()) {
+                for ([index, [key, value]] of filteredVersions.entries()) {
                     const versionFolder = `${serviceFolder}/v${key}`;
                     const filePath = `${versionFolder}/${formattedName}.json`;
                     const output = `${argv.output}/${formattedName}/v${key}`
