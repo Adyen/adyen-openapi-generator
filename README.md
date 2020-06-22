@@ -7,6 +7,9 @@ Generate OpenApi models from Adyen APIs to adopt to the Adyen API libraries.
 ## Installation
 `$ npm install`
 
+## Support
+If you have a feature request, or spotted a bug or a technical problem, create a GitHub issue. For other questions, contact our [support team](https://support.adyen.com/hc/en-us/requests/new?ticket_form_id=360000705420).
+
 ## Usage:
 ```console
 Usage: index.js <command> [options]
@@ -18,7 +21,7 @@ Options:
   --version             Show version number                            [boolean]
   --version-number, -v  Version of the API to download. Does not work for local
                         files. Use together with the service option     [string]
-  --file, -f            Generate model from a local file                 [array]
+  --files, -f           Generate model from local files                  [array]
   --language, -l        Generate model for specified language
       [string] [required] [choices: "csharp", "go", "go-experimental", "java", "javascript", "php",
                                                     "python", "typescript-node"]
