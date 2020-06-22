@@ -22,3 +22,6 @@ build
 
 .idea
 node_modules/
+models/
+templates/
+schema/

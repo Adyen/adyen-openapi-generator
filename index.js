@@ -1,22 +1,24 @@
 #!/usr/bin/env node
 
 const yargs = require("yargs");
-const services = ['checkout', 'checkout utility', 'payments', 'recurring', 'payouts', 'platforms account', 'platforms fund', 'platforms notification configuration', 'platforms notification', 'platforms hosted onboard page', 'binlookup', 'pos terminal management'];
+const fetch = require("node-fetch")
+const services = ['checkout', 'checkout utility', 'payments', 'recurring', 'payouts', 'platforms account', 'platforms fund', 'platforms notification configuration', 'platforms notifications', 'platforms hosted onboarding page', 'binlookup', 'pos terminal management'];
 const argv = yargs
     .usage('Usage: $0 <command> [options]')
     .command('generate', 'Generate API models from an OpenAPI spec')
     .option('versionNumber', { alias: 'v', description: 'Version of the API to download. Does not work for local files. Use "latest" for latest version.', type: 'string' })
-    .option('files', {alias: 'f', description: 'Generate model from a local file', type: "array" })
+    .option('files', { alias: 'f', description: 'Generate model from a local file', type: "array" })
     .option('language', {
         alias: 'l', description: 'Generate model for specified language', type: 'string',
         choices: ['csharp', 'go', 'go-experimental', 'java', 'javascript', 'php', 'python', 'typescript-node']
     })
-    .option('packageName', { alias: 'p', description: 'Name of the API Service '})
-    .option('templatesPath', { alias: 't', description: 'Use custom templates from given path'})
+    .option('packageName', { alias: 'p', description: 'Name of the API Service ' })
+    .option('templatesPath', { alias: 't', description: 'Use custom templates from given path' })
     .option('services', {
         alias: 's', description: 'Generate models for specified services only', type: "array",
         choices: services
     })
+    .option('modelsOnly', { alias: 'm', description: 'Generate only models (No API)', type: 'boolean' })
     .option('output', { alias: 'o', description: 'Path where generated models are saved', type: 'string', default: './models' })
     .demandOption(['l'])
     .help()
@@ -29,57 +31,125 @@ const fs = require("fs");
 
 const tmpFolder = "./tmp";
 let baseUrl = "https://docs.adyen.com/api-explorer/json";
+const repo = "https://api.github.com/repos/OpenAPITools/openapi-generator"
+const latestReleaseUri = `${repo}/releases/latest`
 
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    shell.exec(`node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`);
+    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `--package-name ${p}` : ""} -g ${argv.language} -o ${o}`
+    const command = argv.modelsOnly ? `export JAVA_OPTS='-Dmodels -DskipFormModel=true' && ${generateCommand}` : generateCommand
+    shell.exec(command, { silent: true });
 }
 
-if (argv.files) {
-    argv.files.forEach(f => {
-        shell.echo(`┌ ⚙️  Generating specs for file: ${f}`);
-        generateTemplate(f)
-        shell.echo("└ ✔️  Done");
-    })
-} else {
-    const tempServices = `${tmpFolder}/services.json`
-    shell.exec(`curl ${baseUrl}/Services.json -o "${tempServices}"`);
-    const file = fs.readFileSync("./tmp/services.json").toString();
+const fetchServices = async () => {
+    const res = await fetch(`${baseUrl}/Services.json`)
+    return await res.json()
+}
 
-    const {services} = JSON.parse(file);
-    const filteredServices = argv.services ? Object.entries(services).filter(([name]) => argv.services.includes(name.toLowerCase())) : Object.entries(services);
-    shell.echo(`\n  💬    Models will be saved on ${path.resolve(__dirname, argv.output)} folder\n`);
-    filteredServices.forEach(([name, service]) => {
-        const slicedName = name.split(" ").join("");
-        const formattedName = slicedName.charAt(0).toLowerCase() + slicedName.slice(1);
-        const serviceFolder = `${tmpFolder}/${formattedName}`;
-        shell.mkdir(serviceFolder);
-        const versions = Object.entries(service.versions);
-        const filteredVersions = argv.versionNumber ?
-            argv.versionNumber === "latest" ? [versions.pop()] : versions.filter(([key]) => key === argv.versionNumber)
-            : versions;
-        if (!filteredVersions.length) {
-            shell.echo('Error: API returned 0 results for given version number')
-            process.exit(1)
+const downloadApiFiles = async (value, filePath) => {
+    const res = await fetch(`${baseUrl}/${value.reference}`)
+    const json = await res.json()
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 4), { flag: 'w', encoding: 'utf8' }, function (err) {
+        if (err) {
+            return console.error(err)
         }
-        filteredVersions.forEach(([key, value], index) => {
-            const versionFolder = `${serviceFolder}/v${key}`;
-            const filePath = `${versionFolder}/${formattedName}.json`;
-            const output = `${argv.output}/${formattedName}/v${key}`
-            shell.mkdir(versionFolder);
-            shell.echo(`   │   ┌  v${key} (${index + 1}/${versions.length})`);
-            shell.echo(`   │   │ 🗜   Downloading OpenAPI file from  ${baseUrl}/${value.reference}`);
-            shell.exec(`curl ${baseUrl}/${value.reference} -o "${filePath}"`);
-            shell.echo(`   │   │ ⚙️   Generating specs for ${name} v${key}`);
-            generateTemplate(filePath, formattedName, output)
-            shell.echo("   │   └ ✔️  done");
-        });
-        shell.echo(`   └─ Done!`);
-    });
+    })
 }
 
+const getLatestVersion = async () => {
+    const res = await fetch(latestReleaseUri)
+    const { tag_name: tagName } = await res.json()
+    return tagName.slice(1)
+}
+const hasLatestVersion = async (tagName) => {
+    if (fs.existsSync("./openapi-generator-cli")) {
+        if (fs.existsSync("./openapi-generator-cli/bin/openapi-generator.jar")) {
+            const { stdout, stderr } = shell.exec(`node ./openapi-generator-cli/bin/openapi-generator version`, { silent: true })
+            if (!stderr) {
+                return stdout.startsWith(tagName)
+            }
+            console.error(stderr)
+            shell.exit(1)
+        }
+    } else {
+        console.log("OpenAPI generator not found. Cloning repo and generating build...")
+        shell.exec(`git clone https://github.com/OpenAPITools/openapi-generator-cli.git openapi-generator-cli`, { silent: true })
+        shell.cd("./openapi-generator-cli")
+        shell.exec("chmod -R 777 .")
+        shell.rm("-rf", ".git")
+        shell.rm("-rf", "lib")
+        shell.cd("..")
+        console.log("✔️  Done")
+    }
 
-shell.rm("-rf", tmpFolder);
-shell.echo("-ne", "                                                                        \r");
-shell.echo(" 🤘  All Done!");
+    return false
+}
+
+(async function run() {
+    const latestVer = await getLatestVersion()
+    const isLatest = await hasLatestVersion(latestVer)
+    if (!isLatest) {
+        console.log("Downloading latest version of the OpenAPI Generator JAR file... (This will happen only once for every new version)")
+        shell.rm("-rf", "./openapi-generator-cli/bin/openapi-generator-*.jar")
+        shell.cd("./openapi-generator-cli")
+        shell.exec(`curl https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${latestVer}/openapi-generator-cli-${latestVer}.jar -o ./bin/openapi-generator.jar`, { silent: true })
+        shell.cd("..")
+        console.log("✔️  Done")
+    }
+    try {
+        if (argv.files) {
+            argv.files.forEach(f => {
+                console.log(`┌ ⚙️  Generating specs for file: ${f}`);
+                generateTemplate(f)
+                console.log("└ ✔️  Done");
+            })
+        } else {
+            const { services } = await fetchServices()
+            const filteredServices = argv.services ? Object.entries(services).filter(([name]) => argv.services.includes(name.toLowerCase())) : Object.entries(services);
+            console.log(`\n  💬    Models will be saved on ${path.resolve(__dirname, argv.output)} folder\n`)
+            for ([name, service] of filteredServices) {
+                const slicedName = name.split(" ").join("");
+                const formattedName = slicedName.charAt(0).toLowerCase() + slicedName.slice(1);
+                const serviceFolder = `${tmpFolder}/${formattedName}`;
+                shell.mkdir(serviceFolder);
+                const versions = Object.entries(service.versions);
+                const filteredVersions = argv.versionNumber ?
+                    argv.versionNumber === "latest" ? [versions.pop()] : versions.filter(([key]) => key === argv.versionNumber)
+                    : versions;
+                if (!filteredVersions.length) {
+                    console.error('Error: API returned 0 results for given version number')
+                    process.exit(1)
+                }
+                for ([index, [key, value]] of filteredVersions.entries()) {
+                    const versionFolder = `${serviceFolder}/v${key}`;
+                    const filePath = `${versionFolder}/${formattedName}.json`;
+                    const output = `${argv.output}/${formattedName}/v${key}`
+                    shell.mkdir(versionFolder);
+                    console.log(`   │   ┌  v${key} (${index + 1}/${versions.length})`);
+                    console.log(`   │   │ 🗜   Downloading OpenAPI file from  ${baseUrl}/${value.reference}`);
+                    try {
+                        await downloadApiFiles(value, filePath)
+                        shell.exec(`curl ${baseUrl}/${value.reference} -o "${filePath}"`);
+                        console.log(`   │   │ ⚙️   Generating specs for ${name} v${key}`);
+                        generateTemplate(filePath, formattedName, output)
+                    } catch (e) {
+                        console.error(e)
+                    } finally {
+                        console.log("   │   └ ✔️  done");
+                    }
+                };
+                console.log(`   └─ Done!`);
+            };
+        }
+    } catch (e) {
+        console.error(e)
+    } finally {
+        // shell.exec("dtsgen --out types.d.ts ./tmp/**/*.json")
+        shell.rm("-rf", tmpFolder)
+        console.log("                                                                        \r");
+        console.log(" 🤘  All Done!");
+    }
+})()
+
+
