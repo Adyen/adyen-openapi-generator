@@ -2,7 +2,7 @@
 
 const yargs = require("yargs");
 const fetch = require("node-fetch")
-const services = ['checkout', 'checkout utility', 'payments', 'recurring', 'payouts', 'platforms account', 'platforms fund', 'platforms notification configuration', 'platforms notification', 'platforms hosted onboard page', 'binlookup', 'pos terminal management'];
+const services = ['checkout', 'checkout utility', 'payments', 'recurring', 'payouts', 'platforms account', 'platforms fund', 'platforms notification configuration', 'platforms notifications', 'platforms hosted onboarding page', 'binlookup', 'pos terminal management'];
 const argv = yargs
     .usage('Usage: $0 <command> [options]')
     .command('generate', 'Generate API models from an OpenAPI spec')
@@ -37,7 +37,7 @@ const latestReleaseUri = `${repo}/releases/latest`
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `-p ${p}` : ""} -g ${argv.language} -o ${o}`
+    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `--package-name ${p}` : ""} -g ${argv.language} -o ${o}`
     const command = argv.modelsOnly ? `export JAVA_OPTS='-Dmodels -DskipFormModel=true' && ${generateCommand}` : generateCommand
     shell.exec(command, { silent: true });
 }
@@ -130,7 +130,7 @@ const hasLatestVersion = async (tagName) => {
                     console.log(`   │   │ 🗜   Downloading OpenAPI file from  ${baseUrl}/${value.reference}`);
                     try {
                         await downloadApiFiles(value, filePath)
-                        // shell.exec(`curl ${baseUrl}/${value.reference} -o "${filePath}"`);
+                        shell.exec(`curl ${baseUrl}/${value.reference} -o "${filePath}"`);
                         console.log(`   │   │ ⚙️   Generating specs for ${name} v${key}`);
                         generateTemplate(filePath, formattedName, output)
                     } catch (e) {
@@ -145,6 +145,7 @@ const hasLatestVersion = async (tagName) => {
     } catch (e) {
         console.error(e)
     } finally {
+        // shell.exec("dtsgen --out types.d.ts ./tmp/**/*.json")
         shell.rm("-rf", tmpFolder)
         console.log("                                                                        \r");
         console.log(" 🤘  All Done!");
