@@ -10,7 +10,7 @@ const argv = yargs
     .option('files', { alias: 'f', description: 'Generate model from a local file', type: "array" })
     .option('language', {
         alias: 'l', description: 'Generate model for specified language', type: 'string',
-        choices: ['csharp', 'go', 'go-experimental', 'java', 'javascript', 'php', 'python', 'typescript-node']
+        choices: ['apex', 'csharp', 'go', 'go-experimental', 'java', 'javascript', 'php', 'python', 'typescript-node']
     })
     .option('packageName', { alias: 'p', description: 'Name of the API Service ' })
     .option('templatesPath', { alias: 't', description: 'Use custom templates from given path' })
