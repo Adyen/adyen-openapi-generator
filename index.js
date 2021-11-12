@@ -37,7 +37,7 @@ const latestReleaseUri = `${repo}/releases/latest`
 shell.mkdir(tmpFolder);
 
 const generateTemplate = (f, p = argv.packageName, o = argv.output) => {
-    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `--package-name ${p}` : ""} -g ${argv.language} -o ${o} --additional-properties=modelPropertyNaming=original,modelPackage=Checkout`
+    const generateCommand = `node ./openapi-generator-cli/bin/openapi-generator generate --skip-validate-spec -i "${f}" ${argv.templatesPath ? `-t ${argv.templatesPath}` : ""} ${p ? `--package-name ${p}` : ""} -g ${argv.language} -o ${o} --additional-properties=modelPackage=Checkout`
     const command = argv.modelsOnly ? `export JAVA_OPTS='-Dmodels -DskipFormModel=true' && ${generateCommand}` : generateCommand
     shell.exec(command, { silent: true });
 }
