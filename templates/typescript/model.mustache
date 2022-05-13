@@ -13,11 +13,16 @@ import { {{classname}} } from '{{filename}}';
 {{^isEnum}}
 export class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{
 {{#vars}}
-{{#description}}
+
     /**
+{{#description}}
     * {{{description}}}
-    */
 {{/description}}
+{{#deprecated}}
+    *
+    * @deprecated
+{{/deprecated}}
+    */
     '{{name}}'{{^required}}?{{/required}}: {{#isEnum}}{{{datatypeWithEnum}}}{{/isEnum}}{{^isEnum}}{{{dataType}}}{{/isEnum}};
 {{/vars}}
 }
